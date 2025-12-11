@@ -30,7 +30,7 @@ result1 <- sqldf(query1)
 print(result1)
 
 # Save results
-write_csv(result1, "murray_query1_results.csv")
+write_csv(result1, "murray_most_expensive_universities.csv")
 
 
 
@@ -52,7 +52,7 @@ result2 <- sqldf(query2)
 print(result2)
 
 # Save results
-write_csv(result2, "murray_query2_results.csv")
+write_csv(result2, "murray_average_salary_by_state.csv")
 
 
 # ============================================================================
@@ -78,7 +78,7 @@ result3 <- sqldf(query3)
 print(result3)
 
 # Save results
-write_csv(result3, "murray_query3_results.csv")
+write_csv(result3, "murray_roi_analysis.csv")
 
 
 # ============================================================================
@@ -115,7 +115,7 @@ viz1 <- ggplot(tuition_salary, aes(x = out_of_state_tuition, y = early_career_pa
   )
 
 print(viz1)
-ggsave("murray_viz1_tuition_vs_salary.png", viz1, width = 10, height = 7, dpi = 300)
+ggsave("murray_tuition_vs_salary.png", viz1, width = 10, height = 7, dpi = 300)
 
 
 # ============================================================================
@@ -150,7 +150,7 @@ viz2 <- ggplot(top_tuition_states, aes(x = reorder(state, avg_tuition), y = avg_
   )
 
 print(viz2)
-ggsave("murray_viz2_tuition_by_state.png", viz2, width = 10, height = 8, dpi = 300)
+ggsave("murray_tuition_by_state.png", viz2, width = 10, height = 8, dpi = 300)
 
 
 # ============================================================================
@@ -197,5 +197,5 @@ viz3_simple <- ggplot(avg_salary_by_type, aes(x = reorder(type, avg_salary), y =
   )
 
 print(viz3_simple)
-ggsave("murray_viz3_salary_by_type_SIMPLE.png", viz3_simple, width = 10, height = 7, dpi = 300)
+ggsave("murray_salary_by_type.png", viz3_simple, width = 10, height = 7, dpi = 300)
 ```
