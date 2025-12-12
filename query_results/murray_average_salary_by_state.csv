@@ -1,0 +1,11 @@
+state_name,avg_early_pay,avg_mid_pay,num_schools
+California,67232,123976,25
+New-York,66688,122328,25
+Massachusetts,63100,115712,25
+Pennsylvania,60644,110884,25
+Texas,57468,103476,25
+Connecticut,55220,99855,20
+Alaska,55133.33,97600,3
+Illinois,54944,99520,25
+Maryland,54852,98480,25
+New-Jersey,54764,100172,25
