@@ -1,20 +1,38 @@
-install.packages("tidyverse", dependencies = TRUE)
-install.packages("sqldf", dependencies = TRUE)
-install.packages("scales", dependencies = TRUE)
-
 library(tidyverse)  
 library(sqldf)      
 library(scales) 
 
+# ============================================================================
+# LOAD CLEANED DATA
+# ============================================================================
+# Load cleaned datasets from cleaned_datasets folder
+# These datasets have been preprocessed by data_cleaning.R with:
+# - Standardized lowercase column names
+# - Missing value flags added
+# - Duplicates removed
+# - Data quality validated
 
-tuition_cost <- read_csv("https://raw.githubusercontent.com/Murray-bugslayer/buan314_project/refs/heads/main/datasets/tuition_cost.csv")
-salary_potential <- read_csv("https://raw.githubusercontent.com/Murray-bugslayer/buan314_project/refs/heads/main/datasets/salary_potential.csv")
+# Determine paths based on where script is being run from
+if (dir.exists("cleaned_datasets")) {
+  data_path <- "cleaned_datasets"
+  queries_path <- "queries"
+  viz_path <- "visualizations"
+} else {
+  data_path <- "../cleaned_datasets"
+  queries_path <- "../queries"
+  viz_path <- "../visualizations"
+}
+
+tuition_cost <- read_csv(file.path(data_path, "tuition_cost_clean.csv"))
+salary_potential <- read_csv(file.path(data_path, "salary_potential_clean.csv"))
+diversity_school <- read_csv(file.path(data_path, "diversity_school_clean.csv"))
 
 
 # ============================================================================
 # MURRAY'S SQL QUERY 1: Top 10 Most Expensive Universities
 # ============================================================================
 
+# Note: Column names are now lowercase after cleaning
 query1 <- "SELECT name, 
                   state, 
                   type, 
@@ -30,7 +48,7 @@ result1 <- sqldf(query1)
 print(result1)
 
 # Save results
-write_csv(result1, "murray_most_expensive_universities.csv")
+write_csv(result1, file.path(queries_path, "murray_most_expensive_universities.csv"))
 
 
 
@@ -52,7 +70,7 @@ result2 <- sqldf(query2)
 print(result2)
 
 # Save results
-write_csv(result2, "murray_average_salary_by_state.csv")
+write_csv(result2, file.path(queries_path, "murray_average_salary_by_state.csv"))
 
 
 # ============================================================================
@@ -78,7 +96,7 @@ result3 <- sqldf(query3)
 print(result3)
 
 # Save results
-write_csv(result3, "murray_roi_analysis.csv")
+write_csv(result3, file.path(queries_path, "murray_roi_analysis.csv"))
 
 
 # ============================================================================
@@ -115,7 +133,7 @@ viz1 <- ggplot(tuition_salary, aes(x = out_of_state_tuition, y = early_career_pa
   )
 
 print(viz1)
-ggsave("murray_tuition_vs_salary.png", viz1, width = 10, height = 7, dpi = 300)
+ggsave(file.path(viz_path, "murray_tuition_vs_salary.png"), viz1, width = 10, height = 7, dpi = 300)
 
 
 # ============================================================================
@@ -150,7 +168,7 @@ viz2 <- ggplot(top_tuition_states, aes(x = reorder(state, avg_tuition), y = avg_
   )
 
 print(viz2)
-ggsave("murray_tuition_by_state.png", viz2, width = 10, height = 8, dpi = 300)
+ggsave(file.path(viz_path, "murray_tuition_by_state.png"), viz2, width = 10, height = 8, dpi = 300)
 
 
 # ============================================================================
@@ -197,5 +215,5 @@ viz3_simple <- ggplot(avg_salary_by_type, aes(x = reorder(type, avg_salary), y =
   )
 
 print(viz3_simple)
-ggsave("murray_salary_by_type.png", viz3_simple, width = 10, height = 7, dpi = 300)
+ggsave(file.path(viz_path, "murray_salary_by_type.png"), viz3_simple, width = 10, height = 7, dpi = 300)
 ```

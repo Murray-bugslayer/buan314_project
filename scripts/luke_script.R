@@ -11,13 +11,29 @@ library(sqldf)
 library(scales)
 
 # ============================================================================
-# DATA LOADING
+# DATA LOADING - CLEANED DATA
 # ============================================================================
-# Load all relevant datasets from the repository
+# Load cleaned datasets from cleaned_datasets folder
+# These datasets have been preprocessed by data_cleaning.R with:
+# - Standardized lowercase column names
+# - Missing value flags added
+# - Duplicates removed
+# - Data quality validated
 
-tuition_cost <- read_csv("https://raw.githubusercontent.com/Murray-bugslayer/buan314_project/refs/heads/main/datasets/tuition_cost.csv")
-salary_potential <- read_csv("https://raw.githubusercontent.com/Murray-bugslayer/buan314_project/refs/heads/main/datasets/salary_potential.csv")
-diversity_school <- read_csv("https://raw.githubusercontent.com/Murray-bugslayer/buan314_project/refs/heads/main/datasets/diversity_school.csv")
+# Determine paths based on where script is being run from
+if (dir.exists("cleaned_datasets")) {
+  data_path <- "cleaned_datasets"
+  queries_path <- "queries"
+  viz_path <- "visualizations"
+} else {
+  data_path <- "../cleaned_datasets"
+  queries_path <- "../queries"
+  viz_path <- "../visualizations"
+}
+
+tuition_cost <- read_csv(file.path(data_path, "tuition_cost_clean.csv"))
+salary_potential <- read_csv(file.path(data_path, "salary_potential_clean.csv"))
+diversity_school <- read_csv(file.path(data_path, "diversity_school_clean.csv"))
 
 cat("\n=== DATA LOADED SUCCESSFULLY ===\n")
 cat("Tuition Cost records:", nrow(tuition_cost), "\n")
@@ -45,7 +61,7 @@ cat("\n=== QUERY 1: Public vs Private Tuition ===\n")
 print(result1)
 
 # Save results with new naming convention
-write_csv(result1, "queries/luke_public_vs_private_tuition.csv")
+write_csv(result1, file.path(queries_path, "luke_public_vs_private_tuition.csv"))
 
 
 # ============================================================================
@@ -69,7 +85,7 @@ cat("\n=== QUERY 2: 2-Year vs 4-Year Programs ===\n")
 print(result2)
 
 # Save results
-write_csv(result2, "queries/luke_degree_length_comparison.csv")
+write_csv(result2, file.path(queries_path, "luke_degree_length_comparison.csv"))
 
 
 # ============================================================================
@@ -95,7 +111,7 @@ cat("\n=== QUERY 3: Top Career Salary Growth ===\n")
 print(result3)
 
 # Save results
-write_csv(result3, "queries/luke_career_growth_analysis.csv")
+write_csv(result3, file.path(queries_path, "luke_career_growth_analysis.csv"))
 
 
 # ============================================================================
@@ -122,7 +138,7 @@ cat("\n=== QUERY 4: STEM Emphasis vs Salary ===\n")
 print(result4)
 
 # Save results
-write_csv(result4, "queries/luke_stem_salary_correlation.csv")
+write_csv(result4, file.path(queries_path, "luke_stem_salary_correlation.csv"))
 
 
 # ============================================================================
@@ -144,7 +160,8 @@ type_comparison <- tuition_cost %>%
 stem_salary_data <- salary_potential %>%
   filter(!is.na(stem_percent), !is.na(mid_career_pay)) %>%
   mutate(stem_category = case_when(
-    stem_percent >= 50 ~ "High STEM (≥50%)",
+    stem_percent >= 75 ~ "Very High STEM (75-100%)",
+    stem_percent >= 50 ~ "High STEM (50-74%)",
     stem_percent >= 25 ~ "Moderate STEM (25-49%)",
     TRUE ~ "Low STEM (<25%)"
   ))
@@ -191,7 +208,7 @@ viz1 <- ggplot(type_comparison, aes(x = type, y = avg_tuition, fill = type)) +
   )
 
 print(viz1)
-ggsave("visualizations/luke_school_type_comparison.png", viz1, width = 10, height = 7, dpi = 300, bg = "white")
+ggsave(file.path(viz_path, "luke_public_vs_private_tuition.png"), viz1, width = 10, height = 7, dpi = 300, bg = "white")
 
 
 # ============================================================================
@@ -203,12 +220,13 @@ ggsave("visualizations/luke_school_type_comparison.png", viz1, width = 10, heigh
 cat("\n=== Creating Visualization 2: STEM vs Salary ===\n")
 
 viz2 <- ggplot(stem_salary_data, aes(x = stem_percent, y = mid_career_pay)) +
-  geom_point(aes(color = stem_category), alpha = 0.7, size = 3) +
-  geom_smooth(method = "lm", color = "#FF006E", size = 1.2, se = TRUE, alpha = 0.2) +
+  geom_point(aes(color = stem_category), alpha = 0.5, size = 3) +
+  geom_smooth(method = "lm", color = "black", size = 1.2, se = TRUE, alpha = 0.2) +
   scale_x_continuous(labels = percent_format(scale = 1)) +
   scale_y_continuous(labels = dollar_format(prefix = "$", big.mark = ",")) +
   scale_color_manual(values = c(
-    "High STEM (≥50%)" = "#06FFA5",
+    "Very High STEM (75-100%)" = "#06FFA5",
+    "High STEM (50-74%)" = "#4ECDC4",
     "Moderate STEM (25-49%)" = "#FFBE0B",
     "Low STEM (<25%)" = "#FF006E"
   )) +
@@ -233,12 +251,102 @@ viz2 <- ggplot(stem_salary_data, aes(x = stem_percent, y = mid_career_pay)) +
   )
 
 print(viz2)
-ggsave("visualizations/luke_stem_salary_correlation.png", viz2, width = 10, height = 7, dpi = 300, bg = "white")
+ggsave(file.path(viz_path, "luke_stem_salary_correlation.png"), viz2, width = 10, height = 7, dpi = 300, bg = "white")
 
 
 # ============================================================================
 # SUMMARY AND OUTPUT
 # ============================================================================
+
+# ============================================================================
+# LUKE'S VISUALIZATION 3: Degree Length Cost Comparison
+# ============================================================================
+# Objective: Compare costs between 2-year and 4-year programs visually
+
+degree_comparison <- tuition_cost %>%
+  filter(!is.na(degree_length), 
+         !is.na(out_of_state_tuition),
+         degree_length %in% c("2 Year", "4 Year")) %>%
+  group_by(degree_length) %>%
+  summarize(
+    avg_tuition = mean(out_of_state_tuition, na.rm = TRUE),
+    count = n()
+  )
+
+viz3 <- ggplot(degree_comparison, aes(x = degree_length, y = avg_tuition, fill = degree_length)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = paste0("$", format(round(avg_tuition), big.mark = ","))), 
+            vjust = -0.5, size = 5, fontface = "bold") +
+  scale_y_continuous(labels = dollar_format(), expand = expansion(mult = c(0, 0.15))) +
+  scale_fill_manual(values = c("2 Year" = "#2E86AB", "4 Year" = "#A23B72")) +
+  labs(
+    title = "Average Out-of-State Tuition: 2-Year vs 4-Year Programs",
+    subtitle = "4-year programs cost significantly more per year",
+    x = "Degree Length",
+    y = "Average Out-of-State Tuition",
+    caption = "Note: This is annual tuition cost, not total program cost | Source: College Tuition, Diversity, and Pay Dataset"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(size = 12, color = "gray40"),
+    plot.caption = element_text(size = 9, color = "gray50"),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    axis.text = element_text(size = 11)
+  )
+
+print(viz3)
+ggsave(file.path(viz_path, "luke_degree_length_comparison.png"), viz3, width = 10, height = 7, dpi = 300, bg = "white")
+
+
+# ============================================================================
+# LUKE'S VISUALIZATION 4: Career Growth by School Type
+# ============================================================================
+# Objective: Show salary progression from early to mid-career by school type
+
+career_progress <- tuition_cost %>%
+  inner_join(salary_potential, by = "name") %>%
+  filter(!is.na(early_career_pay), !is.na(mid_career_pay), !is.na(type),
+         type %in% c("Public", "Private")) %>%
+  select(type, early_career_pay, mid_career_pay) %>%
+  pivot_longer(cols = c(early_career_pay, mid_career_pay), 
+               names_to = "career_stage", 
+               values_to = "salary") %>%
+  mutate(career_stage = ifelse(career_stage == "early_career_pay", "Early Career", "Mid Career"))
+
+viz4 <- ggplot(career_progress, aes(x = career_stage, y = salary, fill = type)) +
+  geom_boxplot(alpha = 0.7, outlier.alpha = 0.3) +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_fill_brewer(palette = "Set2") +
+  facet_wrap(~type, nrow = 1) +
+  labs(
+    title = "Career Salary Progression by School Type",
+    subtitle = "Distribution of salaries at different career stages",
+    x = "Career Stage",
+    y = "Annual Salary",
+    fill = "School Type",
+    caption = "Source: College Tuition, Diversity, and Pay Dataset"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(size = 12, color = "gray40"),
+    plot.caption = element_text(size = 9, color = "gray50"),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "none",
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    axis.text = element_text(size = 11)
+  )
+
+print(viz4)
+ggsave(file.path(viz_path, "luke_career_growth_analysis.png"), viz4, width = 12, height = 7, dpi = 300, bg = "white")
+
 
 cat("\n" , rep("=", 70), "\n", sep = "")
 cat("ANALYSIS COMPLETE - LUKE'S PROJECT\n")
@@ -251,8 +359,10 @@ cat("  3. luke_career_growth_analysis.csv\n")
 cat("  4. luke_stem_salary_correlation.csv\n\n")
 
 cat("VISUALIZATIONS COMPLETED:\n")
-cat("  1. luke_school_type_comparison.png\n")
-cat("  2. luke_stem_salary_correlation.png\n\n")
+cat("  1. luke_public_vs_private_tuition.png\n")
+cat("  2. luke_stem_salary_correlation.png\n")
+cat("  3. luke_degree_length_comparison.png\n")
+cat("  4. luke_career_growth_analysis.png\n\n")
 
 cat("All files saved to their respective folders.\n")
 cat(rep("=", 70), "\n", sep = "")
