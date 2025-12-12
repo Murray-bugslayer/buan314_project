@@ -101,7 +101,7 @@ cat("WORKBOOK EXECUTION SUMMARY\n")
 cat("========================================\n\n")
 
 # Check what files were created
-queries_path <- ifelse(dir.exists("queries"), "queries", "../queries")
+queries_path <- ifelse(dir.exists("query_results"), "query_results", "../query_results")
 viz_path <- ifelse(dir.exists("visualizations"), "visualizations", "../visualizations")
 
 queries_created <- list.files(queries_path, pattern = "\\.csv$")
@@ -114,7 +114,7 @@ cat("  Location: cleaned_datasets/\n\n")
 
 cat("SQL Query Results:", length(queries_created), "\n")
 if (length(queries_created) > 0) {
-  cat("  Location: queries/\n")
+  cat("  Location: query_results/\n")
   for (q in queries_created) {
     cat("    -", q, "\n")
   }

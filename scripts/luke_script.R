@@ -23,11 +23,11 @@ library(scales)
 # Determine paths based on where script is being run from
 if (dir.exists("cleaned_datasets")) {
   data_path <- "cleaned_datasets"
-  queries_path <- "queries"
+  queries_path <- "query_results"
   viz_path <- "visualizations"
 } else {
   data_path <- "../cleaned_datasets"
-  queries_path <- "../queries"
+  queries_path <- "../query_results"
   viz_path <- "../visualizations"
 }
 

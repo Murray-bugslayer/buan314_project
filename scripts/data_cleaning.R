@@ -78,20 +78,26 @@ cat("    - Schools in salary_potential NOT in tuition_cost:",
 
 cat("STEP 3: Cleaning tuition_cost dataset...\n")
 
-# Create cleaned version
-# Note: We keep rows with missing room_and_board for most analyses
-# Users can filter WHERE room_and_board IS NOT NULL when needed
+# MISSING VALUE STRATEGY:
+# room_and_board has significant missing data but we KEEP these rows because:
+# 1. Most queries focus on tuition (in_state/out_of_state) which is complete
+# 2. room_and_board is supplementary information, not core to analysis
+# 3. Removing would lose valuable schools from our dataset
+# 4. SQL queries can filter WHERE room_and_board IS NOT NULL when needed
+# This is a "keep with documentation" approach per best practices.
+
 tuition_cost_clean <- tuition_cost_raw %>%
   # Remove any duplicate rows (if any)
   distinct() %>%
   # Standardize column names (already good, but ensuring consistency)
   rename_with(tolower) %>%
-  # Add a flag for missing room_and_board for documentation
+  # Add a flag for missing room_and_board for documentation and easy filtering
   mutate(has_room_board_data = !is.na(room_and_board))
 
 cat("  ✓ Removed", dup_tuition, "duplicate rows\n")
 cat("  ✓ Standardized column names\n")
-cat("  ✓ Added has_room_board_data flag\n")
+cat("  ✓ Missing values in room_and_board:", missing_tuition, 
+    "(KEPT - documented with has_room_board_data flag)\n")
 cat("  ✓ Final tuition_cost rows:", nrow(tuition_cost_clean), "\n\n")
 
 # ============================================================================
@@ -100,18 +106,26 @@ cat("  ✓ Final tuition_cost rows:", nrow(tuition_cost_clean), "\n\n")
 
 cat("STEP 4: Cleaning salary_potential dataset...\n")
 
-# Create cleaned version
+# MISSING VALUE STRATEGY:
+# make_world_better_percent has some missing data but we KEEP these rows because:
+# 1. Primary metrics (early_career_pay, mid_career_pay, stem_percent) are complete
+# 2. make_world_better_percent is a survey-based subjective metric
+# 3. Removing would lose schools with valuable salary data
+# 4. SQL queries can filter WHERE make_world_better_percent IS NOT NULL when needed
+# This is a "keep with documentation" approach per best practices.
+
 salary_potential_clean <- salary_potential_raw %>%
   # Remove any duplicate rows (if any)
   distinct() %>%
   # Standardize column names
   rename_with(tolower) %>%
-  # Add flag for missing make_world_better_percent
+  # Add flag for missing make_world_better_percent for easy filtering
   mutate(has_better_world_data = !is.na(make_world_better_percent))
 
 cat("  ✓ Removed", dup_salary, "duplicate rows\n")
 cat("  ✓ Standardized column names\n")
-cat("  ✓ Added has_better_world_data flag\n")
+cat("  ✓ Missing values in make_world_better_percent:", missing_salary,
+    "(KEPT - documented with has_better_world_data flag)\n")
 cat("  ✓ Final salary_potential rows:", nrow(salary_potential_clean), "\n\n")
 
 # ============================================================================
@@ -212,23 +226,33 @@ cat("========================================\n\n")
 
 cat("ACTIONS TAKEN:\n")
 cat("1. Loaded 3 raw datasets from GitHub repository\n")
-cat("2. Identified missing values:\n")
-cat("   - room_and_board:", missing_tuition, "missing (kept in dataset)\n")
-cat("   - make_world_better_percent:", missing_salary, "missing (kept in dataset)\n")
-cat("3. Removed duplicate rows (if any)\n")
+cat("2. Identified and assessed missing values:\n")
+cat("   - room_and_board:", missing_tuition, "missing values (", 
+    round(missing_tuition/nrow(tuition_cost_raw)*100, 1), "% of data)\n")
+cat("   - make_world_better_percent:", missing_salary, "missing values (",
+    round(missing_salary/nrow(salary_potential_raw)*100, 1), "% of data)\n")
+cat("3. Removed duplicate rows:", dup_tuition + dup_salary + dup_diversity, "total\n")
 cat("4. Standardized all column names to lowercase\n")
-cat("5. Added flags for missing data documentation\n")
+cat("5. Added boolean flags (has_room_board_data, has_better_world_data) for filtering\n")
 cat("6. Verified data types and structure\n\n")
 
-cat("DECISIONS MADE:\n")
-cat("• Kept rows with missing room_and_board values\n")
-cat("  Rationale: Many analyses don't require this field\n")
-cat("  Usage: Filter with 'WHERE room_and_board IS NOT NULL' when needed\n\n")
-cat("• Kept rows with missing make_world_better_percent values\n")
-cat("  Rationale: Other salary data is still valuable\n")
-cat("  Usage: Filter when analyzing this specific metric\n\n")
-cat("• Used lowercase column names for consistency\n")
-cat("  Rationale: Easier SQL queries and R coding\n\n")
+cat("MISSING VALUE HANDLING STRATEGY:\n")
+cat("• DECISION: Keep rows with missing values (not removed)\n\n")
+cat("• RATIONALE FOR room_and_board:\n")
+cat("  - Only supplementary cost information (core is tuition)\n")
+cat("  - Primary analyses focus on in_state_tuition and out_of_state_tuition\n")
+cat("  - Deleting would remove", missing_tuition, "otherwise valid schools\n")
+cat("  - Added has_room_board_data flag for conditional filtering\n\n")
+cat("• RATIONALE FOR make_world_better_percent:\n")
+cat("  - Survey-based subjective metric (not all schools participate)\n")
+cat("  - Primary analyses focus on salary metrics (complete data)\n")
+cat("  - Deleting would remove", missing_salary, "schools with valuable salary data\n")
+cat("  - Added has_better_world_data flag for conditional filtering\n\n")
+cat("• IMPLEMENTATION:\n")
+cat("  - All missing values remain as NA in cleaned datasets\n")
+cat("  - SQL queries use: WHERE column_name IS NOT NULL when needed\n")
+cat("  - R code uses: na.rm = TRUE or filter(!is.na(column)) when needed\n")
+cat("  - This approach maximizes data retention while maintaining integrity\n\n")
 
 cat("DATA READY FOR ANALYSIS!\n")
 cat("========================================\n\n")

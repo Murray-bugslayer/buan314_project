@@ -1,0 +1,11 @@
+state,num_schools,avg_tuition,avg_starting_salary,avg_mid_career_salary,salary_to_tuition_ratio
+Florida,8,6375.25,49925,90300,14.16
+Utah,5,6994.4,51720,93100,13.31
+New Mexico,3,6914.67,48933.33,90300,13.06
+Washington,6,7275.5,51116.67,91766.67,12.61
+Idaho,4,7399,49525,88375,11.94
+North Carolina,6,7335.17,48933.33,86933.33,11.85
+Oklahoma,11,6949.82,43727.27,78609.09,11.31
+North Dakota,5,7363.2,45660,80240,10.9
+Missouri,6,8210,49350,88933.33,10.83
+Georgia,11,8054.18,47709.09,86090.91,10.69
