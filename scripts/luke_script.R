@@ -348,6 +348,100 @@ print(viz4)
 ggsave(file.path(viz_path, "luke_career_growth_analysis.png"), viz4, width = 12, height = 7, dpi = 300, bg = "white")
 
 
+# ============================================================================
+# DISTRIBUTION ANALYSIS - TARGET VARIABLES
+# ============================================================================
+# Objective: Visualize distributions of key outcome variables (tuition and salary)
+# Chart Types: Box plots and violin plots
+
+cat("\n=== Creating Distribution Visualizations ===\n")
+
+# Prepare data for distribution analysis
+tuition_dist <- tuition_cost %>%
+  filter(!is.na(in_state_tuition), 
+         type %in% c("Public", "Private")) %>%
+  select(type, in_state_tuition, out_of_state_tuition) %>%
+  pivot_longer(cols = c(in_state_tuition, out_of_state_tuition),
+               names_to = "tuition_type",
+               values_to = "tuition") %>%
+  mutate(tuition_type = ifelse(tuition_type == "in_state_tuition", "In-State", "Out-of-State"))
+
+salary_dist <- salary_potential %>%
+  filter(!is.na(early_career_pay), !is.na(mid_career_pay)) %>%
+  select(early_career_pay, mid_career_pay) %>%
+  pivot_longer(cols = everything(),
+               names_to = "career_stage",
+               values_to = "salary") %>%
+  mutate(career_stage = ifelse(career_stage == "early_career_pay", "Early Career (0-5 years)", "Mid Career (10+ years)"))
+
+# ============================================================================
+# DISTRIBUTION VIZ 1: Tuition Distribution by Type
+# ============================================================================
+
+dist_viz1 <- ggplot(tuition_dist, aes(x = type, y = tuition, fill = type)) +
+  geom_violin(alpha = 0.6, trim = FALSE) +
+  geom_boxplot(width = 0.2, alpha = 0.8, outlier.alpha = 0.5) +
+  facet_wrap(~tuition_type, nrow = 1) +
+  scale_y_continuous(labels = dollar_format(prefix = "$", big.mark = ",")) +
+  scale_fill_manual(values = c("Public" = "#06FFA5", "Private" = "#FFBE0B")) +
+  labs(
+    title = "Distribution of Tuition Costs by Institution Type",
+    subtitle = "Violin plots show full distribution; box plots highlight quartiles and outliers",
+    x = "Institution Type",
+    y = "Annual Tuition",
+    caption = "Source: College Tuition, Diversity, and Pay Dataset"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(size = 11, color = "gray40"),
+    plot.caption = element_text(size = 9, color = "gray50"),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "none",
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    axis.text = element_text(size = 10)
+  )
+
+print(dist_viz1)
+ggsave(file.path(viz_path, "luke_tuition_distribution.png"), dist_viz1, width = 12, height = 7, dpi = 300, bg = "white")
+
+# ============================================================================
+# DISTRIBUTION VIZ 2: Salary Distribution by Career Stage
+# ============================================================================
+
+dist_viz2 <- ggplot(salary_dist, aes(x = career_stage, y = salary, fill = career_stage)) +
+  geom_violin(alpha = 0.6, trim = FALSE) +
+  geom_boxplot(width = 0.3, alpha = 0.8, outlier.alpha = 0.5) +
+  stat_summary(fun = median, geom = "point", size = 3, color = "darkred", shape = 18) +
+  scale_y_continuous(labels = dollar_format(prefix = "$", big.mark = ","),
+                     breaks = seq(0, 200000, 25000)) +
+  scale_fill_manual(values = c("Early Career (0-5 years)" = "#4ECDC4", 
+                                "Mid Career (10+ years)" = "#FF006E")) +
+  labs(
+    title = "Distribution of Salary Outcomes Across Career Stages",
+    subtitle = "Diamond markers indicate median salaries; distributions reveal earning variability",
+    x = "Career Stage",
+    y = "Annual Salary",
+    caption = "Source: PayScale.com via College Tuition, Diversity, and Pay Dataset"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(size = 11, color = "gray40"),
+    plot.caption = element_text(size = 9, color = "gray50"),
+    legend.position = "none",
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    axis.text = element_text(size = 10)
+  )
+
+print(dist_viz2)
+ggsave(file.path(viz_path, "luke_salary_distribution.png"), dist_viz2, width = 10, height = 7, dpi = 300, bg = "white")
+
+
 cat("\n" , rep("=", 70), "\n", sep = "")
 cat("ANALYSIS COMPLETE - LUKE'S PROJECT\n")
 cat(rep("=", 70), "\n\n", sep = "")
@@ -362,7 +456,9 @@ cat("VISUALIZATIONS COMPLETED:\n")
 cat("  1. luke_public_vs_private_tuition.png\n")
 cat("  2. luke_stem_salary_correlation.png\n")
 cat("  3. luke_degree_length_comparison.png\n")
-cat("  4. luke_career_growth_analysis.png\n\n")
+cat("  4. luke_career_growth_analysis.png\n")
+cat("  5. luke_tuition_distribution.png (NEW - Distribution Analysis)\n")
+cat("  6. luke_salary_distribution.png (NEW - Distribution Analysis)\n\n")
 
 cat("All files saved to their respective folders.\n")
 cat(rep("=", 70), "\n", sep = "")
