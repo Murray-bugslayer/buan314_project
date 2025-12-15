@@ -217,6 +217,55 @@ cat("    - historical_tuition.csv (unchanged)\n")
 cat("    - tuition_income.csv (unchanged)\n\n")
 
 # ============================================================================
+# NULL VALUE ANALYSIS (DETAILED CHECK)
+# ============================================================================
+
+cat("========================================\n")
+cat("NULL VALUE ANALYSIS\n")
+cat("========================================\n")
+
+# Load sqldf for SQL-based NULL checking
+if(!require(sqldf, quietly = TRUE)) {
+  install.packages("sqldf")
+  library(sqldf)
+}
+
+# List of all original dataset files
+null_check_files <- c('diversity_school.csv', 'historical_tuition.csv', 'salary_potential.csv', 
+           'tuition_cost.csv', 'tuition_income.csv')
+
+# Check each file for NULL values
+for(file in null_check_files) {
+  cat('\n=== ', file, ' ===\n', sep='')
+  df <- read_csv(file.path(data_path, file), show_col_types=FALSE)
+  
+  total_rows <- nrow(df)
+  cat('Total rows: ', total_rows, '\n\n', sep='')
+  
+  has_nulls <- FALSE
+  
+  # Check each column for NULL values using sqldf
+  for(col in names(df)) {
+    query <- sprintf('SELECT COUNT(*) as count FROM df WHERE `%s` IS NULL', col)
+    null_count <- sqldf(query)
+    
+    if(null_count[[1]] > 0) {
+      percentage <- round((null_count[[1]] / total_rows) * 100, 1)
+      cat('  ', col, ': ', null_count[[1]], ' nulls (', percentage, '%)\n', sep='')
+      has_nulls <- TRUE
+    }
+  }
+  
+  if(!has_nulls) {
+    cat('  No NULL values found in any column\n')
+  }
+}
+
+cat("\n========================================\n")
+cat("NULL ANALYSIS COMPLETE\n")
+cat("========================================\n\n")
+
+# ============================================================================
 # CLEANING SUMMARY REPORT
 # ============================================================================
 
