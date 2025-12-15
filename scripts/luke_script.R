@@ -188,7 +188,7 @@ viz1 <- ggplot(type_comparison, aes(x = type, y = avg_tuition, fill = type)) +
   ) +
   labs(
     title = "Average In-State Tuition: Public vs Private Universities",
-    subtitle = "Private schools cost nearly three times more than public institutions",
+    subtitle = "Private schools cost around five times more than public institutions",
     x = "School Type",
     y = "Average In-State Tuition",
     caption = "Source: College Tuition, Diversity, and Pay Dataset"
